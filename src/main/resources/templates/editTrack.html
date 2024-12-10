@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Edit Track</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light p-5">
+
+    <div class="container">
+        <h1>Edit Track: "<span th:text="${track.title}">Track Title</span>"</h1>    
+
+        <!-- Form for updating track -->
+        <form id="editTrackForm" th:action="@{/tracks/update/{id}(id=${track.id})}" method="post" enctype="multipart/form-data" class="mt-4" onsubmit="uploadTrack(event)">
+            <!-- Hidden input to simulate PUT request method -->
+            <input type="hidden" name="_method" value="PUT">
+            
+            <!-- Track Title -->
+            <div class="mb-3">
+                <label for="title" class="form-label">Track Title</label>
+                <input type="text" class="form-control" id="title" name="title" required th:value="${track.title}">
+            </div>
+
+            <!-- Genre -->
+            <div class="mb-3">
+                <label for="genre" class="form-label">Genre</label>
+                <input type="text" class="form-control" id="genre" name="genre" required th:value="${track.genre}">
+            </div>
+
+            <!-- Lyrics -->
+            <div class="mb-3">
+                <label for="lyrics" class="form-label">Lyrics</label>
+                <textarea id="lyrics" name="lyrics" class="form-control" th:text="${track.lyrics}">Track Lyrics</textarea>
+            </div>
+
+            <!-- Optional Upload (Replace Existing File) -->
+            <div class="mb-3">
+                <label for="file" class="form-label">Replace WAV File (Optional) <p><small>(75MB limit):</small></p></label>
+                <input type="file" id="file" name="file" accept=".wav" class="form-control">
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-3" id="progressContainer" style="display: none;">
+                <label for="progress" class="form-label">Upload Progress</label>
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Update Track</button>
+        </form>
+        
+        <!-- Delete Button with Confirmation -->
+        <div th:if="${track.user.id == userId}">
+            <form th:action="@{/tracks/delete/{id}(id=${track.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this track?');">
+                <!-- Hidden input to simulate DELETE request method -->
+                <input type="hidden" name="_method" value="DELETE">
+                <input type="submit" value="Delete" class="btn btn-danger m-2 mt-3"/>
+            </form>
+        </div>
+
+        <a th:href="@{/welcome}" class="btn btn-secondary m-2">Cancel</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function uploadTrack(event) {
+            event.preventDefault(); // Prevent the default form submission
+            
+            const form = document.getElementById("editTrackForm");
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+
+            // Show the progress container and initialize progress bar
+            const progressContainer = document.getElementById("progressContainer");
+            const progressBar = document.getElementById("progressBar");
+            progressContainer.style.display = "block";
+
+            xhr.upload.addEventListener("progress", function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + "%";
+                    progressBar.setAttribute("aria-valuenow", percentComplete);
+                    progressBar.innerText = Math.round(percentComplete) + "%";
+                }
+            });
+
+            xhr.addEventListener("load", function() {
+                if (xhr.status === 200) {
+                    window.location.href = "/welcome"; // Redirect after successful upload
+                } else {
+                    alert("Failed to update track. Please try again.");
+                }
+            });
+
+            xhr.addEventListener("error", function() {
+                alert("An error occurred during the upload.");
+            });
+
+            xhr.open("POST", form.getAttribute("action"), true);
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>

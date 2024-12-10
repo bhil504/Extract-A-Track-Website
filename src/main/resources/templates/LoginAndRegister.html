@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register or Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light p-5">
+
+<div class="container">
+    <h1 class="text-center">Welcome to Extract-A-Track</h1>
+    <p class="text-center text-muted">by Bhillion Dollar Productions</p>
+    <p class="text-center fst-italic">
+        Extract-A-Track provides storage, track analysis, and song separation services. 
+        Register for a free profile to use our Spleeter Track Separator or Signup for our premium features at $5/month or, if you're already registered, login to manage your tracks.
+    </p>
+
+    <!-- Success or Error Messages -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div th:if="${success}" class="alert alert-success text-center" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Registration Form -->
+        <div class="col-lg-6">
+            <div class="card bg-secondary text-light shadow">
+                <div class="card-body">
+                    <h2 class="fst-italic text-center">Register</h2>
+                    <form th:action="@{/user/register}" th:object="${newUser}" method="post">
+                        <!-- User Registration Fields -->
+                        <div class="form-group mb-3">
+                            <label for="username" class="form-label">Username <small>(min 3 characters)</small></label>
+                            <input type="text" id="username" th:field="*{username}" class="form-control" placeholder="Enter your username" required />
+                            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-danger"></div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">Email <small>(valid email required)</small></label>
+                            <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="Enter your email" required />
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="password" class="form-label">Password <small>(min 8 characters)</small></label>
+                            <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Enter your password" required />
+                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger"></div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="confirm" class="form-label">Confirm Password</label>
+                            <input type="password" id="confirm" th:field="*{confirm}" class="form-control" placeholder="Re-enter your password" required />
+                            <div th:if="${#fields.hasErrors('confirm')}" th:errors="*{confirm}" class="text-danger"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="col-lg-6">
+            <div class="card bg-secondary text-light shadow">
+                <div class="card-body">
+                    <h2 class="fst-italic text-center">Login</h2>
+                    <form th:action="@{/user/login}" th:object="${newLogin}" method="post">
+                        <div class="form-group mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" id="loginEmail" th:field="*{email}" class="form-control" placeholder="Enter your email" required />
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <input type="password" id="loginPassword" th:field="*{password}" class="form-control" placeholder="Enter your password" required />
+                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger"></div>
+                        </div>
+
+                        <div th:if="${not #strings.isEmpty(errorMessage)}" class="alert alert-danger mt-3" th:text="${errorMessage}"></div>
+
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

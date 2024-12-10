@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Spleeter Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light p-5">
+    <h1 class="m-4">Spleeter Track Separation</h1>
+
+    <div>
+        <h2>What is Track Separation:</h2>
+        <h6 class="fst-italic"><small>Track Separation Form located below this description</small></h6>
+    </div>
+
+    <div>
+		<p class="shadow-lg p-3 mb-5 rounded"><small>
+		            Our track separation feature is powered by Spleeter, a state-of-the-art audio separation tool developed by Deezer. Spleeter allows you to break down your audio tracks into individual components or "stems." This is incredibly useful for musicians, producers, and DJs who want more control over the various elements of a track, such as vocals, drums, bass, and other instruments.
+		            <br><br>
+		            How It Works:
+		            <br>Separate Audio into Stems: With Spleeter, you can split a track into two or five different stems.
+		            <br>2-Stem Mode: Separates the track into vocals and accompaniment (instruments).
+		            <br>5-Stem Mode: Breaks down the track into vocals, drums, bass, piano, and other instruments.
+		            <br><br>
+		            Why Use Track Separation?
+		            <br>Remix or Mashup: Easily isolate vocals or instruments to create remixes or mashups.
+		            <br>Practice with Instrumentals: Use the accompaniment (minus vocals) to practice singing or playing along.
+		            <br>Creative Sound Design: Manipulate individual stems for advanced sound design or production.
+		            <br><br>
+		            Simply upload your track, select how many stems you want, and let Spleeter do the rest. Once processed, you'll be able to download the isolated components and use them in your projects!
+		        </small></p>
+    </div>
+
+    <div class="bg-dark text-light p-1 m-2">
+        <h2>Spleeter Track Separation Form</h2>
+        <form id="spleeterForm" method="POST" action="/spleeter/uploadAndProcessTrack" enctype="multipart/form-data">
+            <!-- Upload the WAV file -->
+            <div class="mb-3">
+                <label for="trackFile" class="form-label">Upload Your Track Here For Separation (WAV only)</label>
+                <input class="form-control" type="file" id="trackFile" name="trackFile" accept=".wav" required>
+            </div>
+
+            <!-- Stem Selection Dropdown -->
+            <label for="stems">Choose Separation Type:</label>
+            <select id="stems" name="stemCount" class="form-control" required>
+                <option value="2">Vocals/Instrumental (2 stems)</option>
+                <option value="5">Vocals/Drums/Bass/Piano/Other (5 stems)</option>
+            </select>
+            <button type="submit" class="btn btn-primary m-3">Upload and Process with Spleeter</button>
+        </form>
+
+        <!-- Progress Bar -->
+        <div class="progress mt-4" style="height: 25px; display: none;" id="progressContainer">
+            <div 
+                id="progressBar" 
+                class="progress-bar progress-bar-striped progress-bar-animated" 
+                role="progressbar" 
+                style="width: 0%;" 
+                aria-valuenow="0" 
+                aria-valuemin="0" 
+                aria-valuemax="100">
+                0%
+            </div>
+        </div>
+
+        <!-- Stem Downloads Section -->
+        <div id="stemsContainer" style="display: none;" class="mt-4">
+            <h3>Download Separated Stems</h3>
+            <ul id="stemLinks" class="btn btn-outline-info shadow text-white m2"></ul>
+        </div>
+    </div>
+
+    <!-- Back to Dashboard button -->
+    <a href="/welcome" class="btn btn-success mt-4 m-1">Back to Dashboard</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+	    document.getElementById('spleeterForm').addEventListener('submit', async (event) => {
+	        event.preventDefault(); // Prevent default form submission
+
+	        const form = event.target;
+	        const formData = new FormData(form);
+	        const progressContainer = document.getElementById('progressContainer');
+	        const progressBar = document.getElementById('progressBar');
+	        const stemsContainer = document.getElementById('stemsContainer');
+	        const stemLinks = document.getElementById('stemLinks');
+
+	        // Reset progress and download UI
+	        progressContainer.style.display = 'block';
+	        progressBar.style.width = '0%';
+	        progressBar.textContent = 'Uploading...';
+	        progressBar.classList.add('progress-bar-animated');
+	        stemsContainer.style.display = 'none';
+	        stemLinks.innerHTML = ''; // Clear old links
+
+	        try {
+	            // Perform the fetch POST request
+	            const response = await fetch(form.action, {
+	                method: form.method,
+	                body: formData,
+	            });
+
+	            // Handle HTTP errors
+	            if (!response.ok) {
+	                throw new Error(`Upload failed: ${response.statusText}`);
+	            }
+
+	            // Parse the JSON response
+	            const result = await response.json();
+
+	            // Update progress bar to indicate completion
+	            progressBar.style.width = '100%';
+	            progressBar.textContent = 'Processing Complete!';
+	            progressBar.classList.remove('progress-bar-animated');
+
+	            // Display download links for separated stems
+	            stemsContainer.style.display = 'block';
+	            result.stems.forEach((link) => {
+	                const listItem = document.createElement('li');
+	                listItem.className = 'list-group-item';
+	                listItem.innerHTML = `<a href="${link}" target="_blank" class="btn btn-outline-info">${decodeURIComponent(link.split('/').pop())}</a>`;
+	                stemLinks.appendChild(listItem);
+	            });
+	        } catch (error) {
+	            // Update progress bar to indicate an error
+	            progressBar.classList.add('bg-danger');
+	            progressBar.textContent = 'Error Occurred';
+	            console.error('Error:', error);
+	        }
+	    });
+	</script>
+
+</body>
+</html>

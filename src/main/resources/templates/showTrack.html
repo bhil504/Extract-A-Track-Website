@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Track Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light p-5">
+    <div class="shadow-lg p-3 m-2 rounded">
+        <div class="container">
+            <h1 th:text="'&quot;' + ${track.title} + '&quot; Details Page'">Track Details Page</h1>
+            
+            <!-- Feedback Messages -->
+            <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        
+            <!-- Download Original WAV File -->
+            <form th:action="@{/tracks/{id}/download-wav(id=${track.id})}" method="get">
+                <button type="submit" class="btn btn-outline-primary shadow text-white mt-2 mb-2">Download Original WAV</button>
+            </form>
+
+            <!-- Convert to MP3 Button with Progress Bar -->
+            <form id="convertForm" th:action="@{/tracks/{id}/convert-to-mp3-async(id=${track.id})}" method="post" onsubmit="startConvert(event)">
+                <button type="submit" class="btn btn-outline-warning shadow text-white mt-2 mb-2">Convert to MP3</button>
+            </form>
+            <div class="progress mb-3">
+                <div id="convertProgressBar" class="progress-bar progress-bar-striped bg-warning" role="progressbar" style="width: 0%">0%</div>
+            </div>
+
+            <!-- Download Converted MP3 File -->
+            <form th:action="@{/tracks/{id}/download-mp3(id=${track.id})}" method="get">
+                <button type="submit" class="btn btn-primary shadow text-white mt-2 mb-2">Download MP3</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export to Spleeter Form with Progress Bar -->
+    <div class="shadow-lg p-3 m-2 rounded">
+        <h2>Separate Track With Spleeter</h2>
+        <form id="spleeterForm" th:action="@{/spleeter/{id}/export-spleeter(id=${track.id})}" method="post" onsubmit="startSpleeter(event)">
+            <label for="stems">Number of Stems:</label>
+            <select name="stems" id="stems" class="form-select">
+                <option value="2">2 Stems (Vocals and Accompaniment)</option>
+                <option value="5">5 Stems (Vocals, Bass, Drums, Piano, and Other)</option>
+            </select>
+            <button type="submit" class="btn btn-primary shadow text-white mt-2 mb-2">Process Track</button>
+        </form>
+        <div class="progress mb-3">
+            <div id="spleeterProgressBar" class="progress-bar progress-bar-striped bg-primary" role="progressbar" style="width: 0%">0%</div>
+        </div>
+    </div>
+    
+    <div class="shadow-lg p-3 m-2 rounded">
+        <h2>Download Individual Stems</h2>
+        <form th:action="@{/tracks/{id}/download-stem(id=${track.id})}" method="get" th:if="${track.vocals}">
+            <input type="hidden" name="stem" value="vocals">
+            <button type="submit" class="btn btn-outline-info shadow text-white mt-2 mb-2">Download Vocals</button>
+        </form>
+        <form th:action="@{/tracks/{id}/download-stem(id=${track.id})}" method="get" th:if="${track.accompaniment}">
+            <input type="hidden" name="stem" value="accompaniment">
+            <button type="submit" class="btn btn-outline-info shadow text-white mt-2 mb-2">Download Accompaniment</button>
+        </form>
+        <form th:action="@{/tracks/{id}/download-stem(id=${track.id})}" method="get" th:if="${track.bass}">
+            <input type="hidden" name="stem" value="bass">
+            <button type="submit" class="btn btn-outline-info shadow text-white mt-2 mb-2">Download Bass</button>
+        </form>
+        <form th:action="@{/tracks/{id}/download-stem(id=${track.id})}" method="get" th:if="${track.drums}">
+            <input type="hidden" name="stem" value="drums">
+            <button type="submit" class="btn btn-outline-info shadow text-white mt-2 mb-2">Download Drums</button>
+        </form>
+        <form th:action="@{/tracks/{id}/download-stem(id=${track.id})}" method="get" th:if="${track.piano}">
+            <input type="hidden" name="stem" value="piano">
+            <button type="submit" class="btn btn-outline-info shadow text-white mt-2 mb-2">Download Piano</button>
+        </form>
+        <form th:action="@{/tracks/{id}/download-stem(id=${track.id})}" method="get" th:if="${track.other}">
+            <input type="hidden" name="stem" value="other">
+            <button type="submit" class="btn btn-outline-info shadow text-white mt-2 mb-2">Download Other</button>
+        </form>
+    </div>
+
+    <!-- Track Details Section -->
+    <div class="shadow-lg p-3 m-2 rounded">
+        <h2>Track Details:</h2>
+        <p><strong>Title:</strong> <span th:text="${track.title}"></span></p>
+        <p><strong>Genre:</strong> <span th:text="${track.genre}"></span></p>
+        <p><strong>Status:</strong> <span th:text="${track.status}"></span></p>
+        <p><strong>Lyrics:</strong> <span th:text="${track.lyrics}"></span></p>
+    </div>
+
+    <!-- Librosa Analysis Section with Progress Bar -->
+    <div class="shadow-lg p-3 m-2 rounded">
+        <h2>Analyze Track with Librosa</h2>
+        <form id="librosaForm" th:action="@{/librosa/analyzeTrack/{id}(id=${track.id})}" method="post" onsubmit="startLibrosa(event)">
+            <button type="submit" class="btn btn-info m-1">Analyze Track</button>
+        </form>
+        <div class="progress mb-3">
+            <div id="librosaProgressBar" class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: 0%">0%</div>
+        </div>
+        
+        <!-- Display Librosa Analysis Results -->
+        <div class="mb-4 m-2">
+            <h5>Track Analysis Results from Librosa:</h5>
+            <p th:if="${track.tempo}">Tempo: <span th:text="${track.tempo}"></span></p>
+            <p th:if="${track.spectralFeatures}" th:text="${track.spectralFeatures}"></p>
+            <p th:if="${track.songKey}">Key: <span th:text="${track.songKey}"></span></p>
+            <p th:if="${track.beats}" th:text="${track.beats}"></p>
+            <p th:if="${track.melody}" th:text="${track.melody}"></p>
+            <p th:if="${track.mfcc}" th:text="${track.mfcc}"></p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="shadow-lg p-3 m-2 rounded">
+        <a th:href="@{/tracks/{id}/edit(id=${track.id})}" class="btn btn-warning mt-4 m-1">Edit</a>
+		<form th:action="@{/tracks/delete/{id}(id=${track.id})}" method="post" 
+		      th:if="${track.user.id == userId}" 
+		      onsubmit="return confirm('Are you sure you want to delete this track?');">
+		    <input type="hidden" name="_method" value="DELETE">
+		    <input type="submit" value="Delete" class="btn btn-danger m-1"/>
+		</form>
+        <a th:href="@{/welcome}" class="btn btn-success mt-4 m-1">Back to Dashboard</a>
+    </div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+	    function updateProgressBar(progressBarId, percent, status = null) {
+	        const progressBar = document.getElementById(progressBarId);
+	        progressBar.style.width = percent + '%';
+	        progressBar.textContent = status || percent + '%';
+
+	        if (percent === 100) {
+	            progressBar.classList.remove('bg-warning', 'bg-primary', 'bg-info');
+	            progressBar.classList.add(status === 'Complete' ? 'bg-success' : 'bg-danger');
+	        }
+	    }
+
+	    function startProcess(event, progressBarId) {
+	        event.preventDefault();
+	        const form = event.target;
+	        const progressBar = document.getElementById(progressBarId);
+
+	        // Reset progress bar
+	        updateProgressBar(progressBarId, 0, 'Starting...');
+
+	        const xhr = new XMLHttpRequest();
+	        xhr.open(form.method, form.action, true);
+
+	        xhr.upload.onprogress = function (event) {
+	            if (event.lengthComputable) {
+	                const percentComplete = Math.round((event.loaded / event.total) * 100);
+	                updateProgressBar(progressBarId, percentComplete);
+	            }
+	        };
+
+	        xhr.onload = function () {
+	            if (xhr.status === 200) {
+	                updateProgressBar(progressBarId, 100, 'Complete');
+	                setTimeout(() => window.location.reload(), 1000); // Refresh the page after 1 second
+	            } else {
+	                updateProgressBar(progressBarId, 100, 'Failed');
+	            }
+	        };
+
+	        xhr.onerror = function () {
+	            updateProgressBar(progressBarId, 100, 'Error');
+	        };
+
+	        const formData = new FormData(form);
+	        xhr.send(formData);
+	    }
+
+	    // Attach event listeners to each form dynamically
+	    document.getElementById('convertForm').addEventListener('submit', (event) => startProcess(event, 'convertProgressBar'));
+	    document.getElementById('spleeterForm').addEventListener('submit', (event) => startProcess(event, 'spleeterProgressBar'));
+	    document.getElementById('librosaForm').addEventListener('submit', (event) => startProcess(event, 'librosaProgressBar'));
+	</script>
+
+
+</body>
+</html>
